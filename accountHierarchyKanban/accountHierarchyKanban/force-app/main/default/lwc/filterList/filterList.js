@@ -11,6 +11,7 @@ export default class FilterList extends LightningElement {
     }
 
     set filterList(value) {
+        console.log('setting filterlist');
         this._filterList = value;
         this.handleFilterListChange();
     }

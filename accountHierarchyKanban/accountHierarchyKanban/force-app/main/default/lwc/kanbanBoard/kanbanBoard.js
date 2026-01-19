@@ -17,15 +17,17 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
     isPicklistFilter;
 
     filterOperatorOptions = [
-        { label: 'Equal To', value: 'equalTo', compatible: 'any'},
-        { label: 'Contains', value: 'contains', compatible: 'text'},
-        { label: 'Greater Than', value: 'greaterThan', compatible: 'number'},
-        { label: 'Less Than', value: 'lessThan', compatible: 'number'},
-        { label: 'Starts With', value: 'startsWith', compatible: 'text'},
-        { label: 'Ends With', value: 'endsWith', compatible: 'text'},
-        { label: 'Not Equal To', value: 'notEqualTo', compatible: 'any'},
-        { label: 'Is Empty', value: 'isEmpty', compatible: 'any'}
+        { label: 'Equal To', value: 'equalTo', compatible: ['picklist', 'text', 'number', 'date', 'boolean']},
+        { label: 'Contains', value: 'contains', compatible: ['text']},
+        { label: 'Greater Than', value: 'greaterThan', compatible: ['number', 'date']},
+        { label: 'Less Than', value: 'lessThan', compatible: ['number', 'date']},
+        { label: 'Starts With', value: 'startsWith', compatible: ['text']},
+        { label: 'Ends With', value: 'endsWith', compatible: ['text']},
+        { label: 'Not Equal To', value: 'notEqualTo', compatible: ['picklist, text', 'number', 'date', 'boolean']},
+        { label: 'Is Empty', value: 'isEmpty', compatible: ['picklist, text', 'number', 'date', 'boolean']}
     ];
+
+    shownOperators = [];
 
     connectedCallback() {
         this.setFilterOptions();
@@ -119,6 +121,7 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
         if (this.isPicklistFilter) {
             console.log('filterValueOptions Picklist: ' + filterFieldEntry.picklistOptions);
             this.filterValueOptions = filterFieldEntry.picklistOptions;
+            this.inputType = 'picklist';
         } else {
             let fieldType = filterFieldEntry.fieldType.toUpperCase();
             
@@ -162,6 +165,9 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
             
             console.log('inputType: ' + this.inputType);
         }
+        this.shownFilterOperators = this.filterOperatorOptions.filter(operator => {
+                operator.compatible.includes(this.inputType);
+        });
     }
 
     handleFilterOperatorChange(event) {

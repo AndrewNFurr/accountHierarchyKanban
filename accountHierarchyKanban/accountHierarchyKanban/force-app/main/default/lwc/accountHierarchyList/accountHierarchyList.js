@@ -20,15 +20,10 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
     constructor() {
         super();
         getAccounts().then(result => {
-            console.log('result: ' + structuredClone(result));
             this.accountMap = result.accountMap;
-            console.log('accountMap: ' + structuredClone(this.accountMap));
             this.currentUser = result.currentUser;
-            console.log('currentUser: ' + structuredClone(this.currentUser));
             this.subordinateUsers = result.subordinateUsers;
-            console.log('subordinateUsers: ' + structuredClone(this.subordinateUsers));
             this.fieldMetadataList = result.fieldMetadataList;
-            console.log('fieldMetadataList: ' + JSON.stringify(this.fieldMetadataList));
             this.createOwnerObjects();
             this.processFields();
         });
@@ -40,7 +35,7 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
         this.ownersWithAccounts.push({
             owner: this.currentUser,
             accounts: currentUserAccounts,
-            filteredAccounts: []
+            filteredAccounts: structuredClone(currentUserAccounts)
         });
         this.subordinateUsers.forEach((user) => {
             let userAccounts = this.accountMap[user.Id];
@@ -63,6 +58,7 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
     }
 
     handleFilterApplied(event) {
+        console.log('filterApplied', JSON.stringify(event.detail));
         this.filterList = event.detail.filterList;
     }
 }

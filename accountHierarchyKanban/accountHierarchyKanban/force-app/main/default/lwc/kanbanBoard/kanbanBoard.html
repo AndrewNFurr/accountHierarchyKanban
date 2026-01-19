@@ -15,7 +15,7 @@
                     name="filterOperator"
                     label="Filter Operator"
                     value={filterOperator}
-                    options={filterOperatorOptions}
+                    options={shownOperators}
                     onchange={handleFilterOperatorChange}
                 ></lightning-combobox>
             </div>
@@ -52,7 +52,7 @@
                    
                     <h2 class='column-title'>{entry.owner.Name}</h2>
 
-                    <template for:each={entry.accounts} for:item="account">
+                    <template for:each={entry.filteredAccounts} for:item="account">
                         <div key={account.Id}
                             class='kanban-card'
                             onclick={handleCardClick}
