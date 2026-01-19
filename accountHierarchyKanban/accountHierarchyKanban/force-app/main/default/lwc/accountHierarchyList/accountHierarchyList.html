@@ -1,0 +1,18 @@
+<template>
+    <lightning-card title="Account Hierarchy" icon-name="standard:account">
+        <div class="filterBar">
+
+        </div>
+        <div class="accountBoard">
+            <template lwc:if={ownersCreated}>
+                <template lwc:if={showKanban}>
+                    <c-kanban-board
+                        current-user={currentUser}
+                        account-owners={ownersWithAccounts}
+                    ></c-kanban-board>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+    
+</template>
