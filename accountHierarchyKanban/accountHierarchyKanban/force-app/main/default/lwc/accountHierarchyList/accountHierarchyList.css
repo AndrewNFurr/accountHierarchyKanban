@@ -1,0 +1,16 @@
+.content-container {
+    display: flex;
+    gap: 1rem;
+    min-height: 500px;
+}
+
+.accountBoard {
+    flex: 4;
+    overflow-x: auto;
+}
+
+.filterBar {
+    flex: 1;
+    border-left: 1px solid #ddd;
+    padding-left: 1rem;
+}

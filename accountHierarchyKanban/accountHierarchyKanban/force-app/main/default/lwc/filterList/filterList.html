@@ -1,3 +1,24 @@
 <template>
-    
+    <lightning-card>
+        <div>
+            <template lwc:if={hasFilters}>
+                <template for:each={filterList} for:item="filter">
+                    <div key={filter.id} class="filter-entry">
+                        <lightning-button-icon
+                            icon-name="utility:delete"
+                            alternative-text="Remove filter"
+                            title="Remove filter"
+                            variant="bare"
+                            class="delete-icon"
+                            data-id={filter.id}
+                            onclick={handleRemoveFilter}
+                        ></lightning-button-icon>
+                        <p>{filter.field}</p>
+                        <p>{filter.operator}</p>
+                        <p>{filter.value}</p>
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
 </template>

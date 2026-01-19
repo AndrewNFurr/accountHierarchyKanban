@@ -10,15 +10,18 @@
 .kanban-container {
     display: flex;
     gap: 0.5rem;
-    justify-content: space-between;
+    overflow-x: auto;
+    padding-bottom: 1rem;
 }
 
 .kanban-column {
-    flex: 1;
+    flex: 0 0 300px;
+    min-width: 300px;
+    max-height: 600px;
+    overflow-y: auto;
     background: #f4f6f9;
     padding: 1rem;
     border-radius: 8px;
-    min-height: 300px;
 }
 
 .column-title {

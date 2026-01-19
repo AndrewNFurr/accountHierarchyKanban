@@ -1,0 +1,13 @@
+.filter-entry {
+    position: relative;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.delete-icon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}

@@ -10,8 +10,10 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
     currentUser;
     subordinateUsers = [];
     ownersWithAccounts = [];
+    fieldMetadataList = [];
+    fieldMetadataMap = {};
     showKanban = true;
-    ownersCreated = false;
+    dataProcessed = false;
 
     @api filterList = [];
 
@@ -25,7 +27,10 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
             console.log('currentUser: ' + structuredClone(this.currentUser));
             this.subordinateUsers = result.subordinateUsers;
             console.log('subordinateUsers: ' + structuredClone(this.subordinateUsers));
+            this.fieldMetadataList = result.fieldMetadataList;
+            console.log('fieldMetadataList: ' + JSON.stringify(this.fieldMetadataList));
             this.createOwnerObjects();
+            this.processFields();
         });
     }
 
@@ -47,6 +52,17 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
         });
 
         console.log('Owners with Account: ', JSON.stringify(this.ownersWithAccounts));
-        this.ownersCreated = true;
+    }
+
+    processFields() {
+        this.fieldMetadataList.forEach((field) => {
+            this.fieldMetadataMap[field.apiName] = field;
+        });
+        console.log('fieldMetadataMap: ' + JSON.stringify(this.fieldMetadataMap));
+        this.dataProcessed = true;
+    }
+
+    handleFilterApplied(event) {
+        this.filterList = event.detail.filterList;
     }
 }

@@ -1,17 +1,24 @@
 <template>
     <lightning-card title="Account Hierarchy" icon-name="standard:account">
-        <div class="filterBar">
-
-        </div>
-        <div class="accountBoard">
-            <template lwc:if={ownersCreated}>
-                <template lwc:if={showKanban}>
-                    <c-kanban-board
-                        current-user={currentUser}
-                        account-owners={ownersWithAccounts}
-                    ></c-kanban-board>
+        <div class="content-container">
+            <div class="accountBoard">
+                <template lwc:if={dataProcessed}>
+                    <template lwc:if={showKanban}>
+                        <c-kanban-board
+                            current-user={currentUser}
+                            account-owners={ownersWithAccounts}
+                            field-metadata-map={fieldMetadataMap}
+                            filter-list={filterList}
+                            onfilterapplied={handleFilterApplied}
+                        ></c-kanban-board>
+                    </template>
                 </template>
-            </template>
+            </div>
+            <div class="filterBar">
+                <c-filter-list
+                    filter-list={filterList}
+                ></c-filter-list>
+            </div>
         </div>
     </lightning-card>
     

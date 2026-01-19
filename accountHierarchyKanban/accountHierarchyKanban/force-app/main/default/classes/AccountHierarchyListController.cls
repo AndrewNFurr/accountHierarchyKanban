@@ -1,5 +1,41 @@
 public with sharing class AccountHierarchyListController {
+    //ConnectApi.RecordUi.getPicklistValuesByRecordType('Opportunity', recordTypeId);
     
+    @AuraEnabled(cacheable=true)
+    public static List<FieldMetadata> getAccountFields() {
+        List<FieldMetadata> fieldMetadataList = new List<FieldMetadata>();
+        
+        Map<String, Schema.SObjectField> fieldMap = Schema.SObjectType.Account.fields.getMap();
+        
+        for(String fieldName : fieldMap.keySet()) {
+            Schema.SObjectField field = fieldMap.get(fieldName);
+            Schema.DescribeFieldResult fieldDescribe = field.getDescribe();
+            
+            FieldMetadata fieldMeta = new FieldMetadata();
+            fieldMeta.label = fieldDescribe.getLabel();
+            fieldMeta.apiName = fieldDescribe.getName();
+            fieldMeta.fieldType = String.valueOf(fieldDescribe.getType());
+            
+            if(fieldDescribe.getType() == Schema.DisplayType.PICKLIST || 
+               fieldDescribe.getType() == Schema.DisplayType.MULTIPICKLIST) {
+                List<PicklistOption> options = new List<PicklistOption>();
+                for(Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
+                    if(entry.isActive()) {
+                        PicklistOption option = new PicklistOption();
+                        option.label = entry.getLabel();
+                        option.value = entry.getValue();
+                        options.add(option);
+                    }
+                }
+                fieldMeta.picklistOptions = options;
+            }
+            
+            fieldMetadataList.add(fieldMeta);
+        }
+        
+        return fieldMetadataList;
+    }
+
     @AuraEnabled(cacheable=true)
     public static AccountWrapper getAccounts() {
         AccountWrapper accountWrapper = new AccountWrapper();
@@ -19,18 +55,32 @@ public with sharing class AccountHierarchyListController {
             accountMap.put(userId, new List<Account>());
         }
 
+        // Get field metadata
+        List<FieldMetadata> fieldMetadataList = getAccountFields();
+        
+        // Build dynamic SOQL with all queryable fields
+        Set<String> fieldNames = new Set<String>();
+        Map<String, Schema.SObjectField> fieldMap = Schema.SObjectType.Account.fields.getMap();
+        for(String fieldName : fieldMap.keySet()) {
+            Schema.DescribeFieldResult fieldDescribe = fieldMap.get(fieldName).getDescribe();
+            if(fieldDescribe.isAccessible()) {
+                fieldNames.add(fieldDescribe.getName());
+            }
+        }
+        
+        String queryString = 'SELECT ' + String.join(new List<String>(fieldNames), ', ') + 
+                           ' FROM Account WHERE OwnerId IN :userIds';
+        
         // Query and populate
-        for(Account a : [
-            SELECT Id, Name, OwnerId, Industry__c, CreatedDate 
-            FROM Account 
-            WHERE OwnerId IN :userIds
-        ]) {
+        for(Account a : Database.query(queryString)) {
             accountMap.get(a.OwnerId).add(a);
         }
+        
         System.debug('AccountMap: ' + accountMap);
         accountWrapper.accountMap = accountMap;
         accountWrapper.currentUser = currentUser;
         accountWrapper.subordinateUsers = subordinateUsers;
+        accountWrapper.fieldMetadataList = fieldMetadataList;
         return accountWrapper;
     }
 
@@ -41,6 +91,26 @@ public with sharing class AccountHierarchyListController {
         public User currentUser;
         @AuraEnabled
         public List<User> subordinateUsers;
+        @AuraEnabled
+        public List<FieldMetadata> fieldMetadataList;
+    }
+
+    public class FieldMetadata {
+        @AuraEnabled
+        public String label;
+        @AuraEnabled
+        public String apiName;
+        @AuraEnabled
+        public String fieldType;
+        @AuraEnabled
+        public List<PicklistOption> picklistOptions;
+    }
+
+    public class PicklistOption {
+        @AuraEnabled
+        public String label;
+        @AuraEnabled
+        public String value;
     }
 
 }
