@@ -1,7 +1,7 @@
 <template>
     <lightning-card>
         <div class="filter-container">
-            <div>
+            <div class="filter-field">
                 <lightning-combobox
                     name="filterField"
                     label="Filter Field"
@@ -10,22 +10,31 @@
                     onchange={handleFilterFieldChange}
                 ></lightning-combobox>
             </div>
-            <div>
+            <div class="filter-operator">
                 <lightning-combobox
                     name="filterOperator"
                     label="Filter Operator"
                     value={filterOperator}
-                    options={shownOperators}
+                    options={shownFilterOperators}
                     onchange={handleFilterOperatorChange}
                 ></lightning-combobox>
             </div>
-            <div>
+            <div class="filter-value">
                 <template lwc:if={isPicklistFilter}>
                     <lightning-combobox
                         name="filterValuePicklist"
                         label="Filter Value"
                         value={filterValue}
                         options={filterValueOptions}
+                        onchange={handleFilterValueChange}
+                    ></lightning-combobox>
+                </template>
+                <template lwc:if={isBooleanFilter}>
+                    <lightning-combobox
+                        name="filterValuePicklist"
+                        label="Filter Value"
+                        value={filterValue}
+                        options={booleanValueOptions}
                         onchange={handleFilterValueChange}
                     ></lightning-combobox>
                 </template>
@@ -45,25 +54,27 @@
             ></lightning-button>
         </div>
         <div class='kanban-container'>
-            <template for:each={accountOwners} for:item="entry">
-                <div key={entry.owner.Id}
-                    class="kanban-column"
-                    data-owner={entry.owner.Name}>
-                   
-                    <h2 class='column-title'>{entry.owner.Name}</h2>
+            <template for:each={shownOwners} for:item="entry">
+                <template lwc:if={entry.hasAccounts}>
+                    <div key={entry.owner.Id}
+                        class="kanban-column"
+                        data-owner={entry.owner.Name}>
+                    
+                        <h2 class='column-title'>{entry.owner.Name}</h2>
 
-                    <template for:each={entry.filteredAccounts} for:item="account">
-                        <div key={account.Id}
-                            class='kanban-card'
-                            onclick={handleCardClick}
-                            data-id={account.Id}>
-                           
-                            <p class='account-title'>{account.Name}</p>
-                            <p class='account-industry'>Industry: {account.Industry__c}</p>
-                            <p class='account-date'>Created Date: {account.CreatedDate}</p>
-                        </div>
-                    </template>
-                </div>
+                        <template for:each={entry.filteredAccounts} for:item="account">
+                            <div key={account.Id}
+                                class='kanban-card'
+                                onclick={handleCardClick}
+                                data-id={account.Id}>
+                            
+                                <p class='account-title'>{account.Name}</p>
+                                <p class='account-industry'>Industry: {account.Industry__c}</p>
+                                <p class='account-date'>Created Date: {account.CreatedDate}</p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
             </template>
         </div>
     </lightning-card>

@@ -1,12 +1,15 @@
 import { LightningElement, wire, track, api } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 
 export default class KanbanBoard extends NavigationMixin(LightningElement) {
     @api accountOwners = [];
-    @api filterList = [];
+    shownOwners = [];
+    //@api filterList = [];
     @api currentUser;
     @api fieldMetadataMap = {};
+    currentFilterList = [];
 
     filterField;
     filterOperator;
@@ -14,7 +17,25 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
     filterValueOptions = [];
     filterOptions = [];
     inputType;
-    isPicklistFilter;
+    isPicklistFilter = false;
+    isBooleanFilter = false;
+
+    _filterList = [];
+
+    @api
+    get filterList() {
+        return this._filterList;
+    }
+
+    set filterList(value) {
+        // Prevent unnecessary processing if it's the same data
+        if (JSON.stringify(this._filterList) === JSON.stringify(value)) {
+            return;
+        }
+        this._filterList = value;
+        this.currentFilterList = structuredClone(this._filterList);
+        this.setFilters(false);
+    }
 
     filterOperatorOptions = [
         { label: 'Equal To', value: 'equalTo', compatible: ['picklist', 'text', 'number', 'date', 'boolean']},
@@ -23,14 +44,21 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
         { label: 'Less Than', value: 'lessThan', compatible: ['number', 'date']},
         { label: 'Starts With', value: 'startsWith', compatible: ['text']},
         { label: 'Ends With', value: 'endsWith', compatible: ['text']},
-        { label: 'Not Equal To', value: 'notEqualTo', compatible: ['picklist, text', 'number', 'date', 'boolean']},
-        { label: 'Is Empty', value: 'isEmpty', compatible: ['picklist, text', 'number', 'date', 'boolean']}
+        { label: 'Not Equal To', value: 'notEqualTo', compatible: ['picklist', 'text', 'number', 'date', 'boolean']},
+        { label: 'Is Empty', value: 'isEmpty', compatible: ['picklist', 'text', 'number', 'date']}
     ];
 
-    shownOperators = [];
+    booleanValueOptions = [
+        { label: 'True', value: 'true' },
+        { label: 'False', value: 'false' }
+    ];
+
+    shownFilterOperators = [];
 
     connectedCallback() {
         this.setFilterOptions();
+        this.shownOwners = structuredClone(this.accountOwners);
+        this.currentFilterList = structuredClone(this.filterList);
     }
 
     setFilterOptions() {
@@ -60,31 +88,50 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
             operator: this.filterOperator,
             value: this.filterValue
         };
-        this.filterList.push(filterEntry);
-        this.accountOwners.forEach(ownerEntry => {
-            let filteredAccounts = structuredClone(ownerEntry.accounts);
-            
-            this.filterList.forEach(filter => {
-                filteredAccounts = filteredAccounts.filter(account => {
-                    return this.applyFilterOperator(account, filter.field, filter.operator, filter.value);
-                });
+        this.currentFilterList.push(filterEntry);
+        this.setFilters(true);
+    }
+
+    setFilters(applyingFilter) {
+        console.log('In setting filters with currentFilterList: ', JSON.stringify(this.currentFilterList));
+        try {
+            this.shownOwners.forEach(ownerEntry => {
+                let filteredAccounts = structuredClone(ownerEntry.accounts);
+                console.log('Owner Accounts: ', JSON.stringify(filteredAccounts));
+                console.log('currentFilterList: ', JSON.stringify(this.currentFilterList));
+                //No filters, show all accounts
+                if (this.currentFilterList && this.currentFilterList.length > 0) {
+                    this.currentFilterList.forEach(filter => {
+                        filteredAccounts = filteredAccounts.filter(account => {
+                            return this.applyFilterOperator(account, filter.field, filter.operator, filter.value);
+                        });
+                    });
+                }
+                ownerEntry.filteredAccounts = filteredAccounts;
             });
-            
-            ownerEntry.filteredAccounts = filteredAccounts;
-        });
-        this.dispatchEvent(new CustomEvent('filterapplied', { detail: this.filterList }));
-        this.clearValues();
+            console.log('All: ', JSON.stringify(this.shownOwners));
+            if (applyingFilter) {
+                this.dispatchEvent(new CustomEvent('filterapplied', { detail: structuredClone(this.currentFilterList) }));
+                this.clearValues();
+            } 
+
+        } catch (error) {
+            console.error('Error applying filter:');
+        }
     }
 
     applyFilterOperator(account, field, operator, value) {
+        console.log(`Applying filter on field: ${field}, operator: ${operator}, value: ${value} for account: ${account.Id}`);
         let accountValue = account[field];
-        
+        console.log('account: ', JSON.stringify(account));
         if (accountValue === null || accountValue === undefined) {
             return operator === 'isEmpty';
         }
         
         let accountValueStr = String(accountValue).toLowerCase();
         let filterValueStr = String(value).toLowerCase();
+        console.log('accountValueStr: ', accountValueStr);
+        console.log('filterValueStr: ', filterValueStr);
         
         switch(operator) {
             case 'equalTo':
@@ -109,9 +156,9 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
     }
 
     handleFilterFieldChange(event) {
-        console.log('In field change 1');
-        console.log('metadata:', JSON.stringify(this.fieldMetadataMap));
-        console.log('event: ' + event.detail.value);
+        this.isBooleanFilter = false;
+        this.isPicklistFilter = false;
+
         this.filterField = event.detail.value;
         console.log('filterField: ' + this.filterField);
         let filterFieldEntry = this.fieldMetadataMap[this.filterField];
@@ -128,7 +175,8 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
             // Map Salesforce field types to lightning-input types
             // Boolean/Checkbox
             if (fieldType === 'BOOLEAN') {
-                this.inputType = 'checkbox';
+                this.isBooleanFilter = true;
+                this.inputType = 'boolean';
             }
             // Numeric Types
             else if (fieldType === 'CURRENCY' || fieldType === 'DOUBLE' || 
@@ -162,12 +210,12 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
             else {
                 this.inputType = 'text';
             }
-            
-            console.log('inputType: ' + this.inputType);
         }
-        this.shownFilterOperators = this.filterOperatorOptions.filter(operator => {
-                operator.compatible.includes(this.inputType);
-        });
+        console.log('inputType: ', this.inputType);
+        console.log('filterOperators: ', this.filterOperatorOptions);
+        this.shownFilterOperators = this.filterOperatorOptions.filter(operator =>
+            operator.compatible.includes(this.inputType)
+        );
     }
 
     handleFilterOperatorChange(event) {
@@ -177,6 +225,9 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
 
     handleFilterValueChange(event) {
         this.filterValue = event.detail.value;
+        if (this.isBooleanFilter) {
+            this.filterValue = (this.filterValue === 'true');
+        }
     }
     
     clearValues() {

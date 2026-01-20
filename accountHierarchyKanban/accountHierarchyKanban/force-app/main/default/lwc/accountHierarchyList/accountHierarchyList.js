@@ -35,6 +35,7 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
         this.ownersWithAccounts.push({
             owner: this.currentUser,
             accounts: currentUserAccounts,
+            hasAccounts: currentUserAccounts && currentUserAccounts.length > 0,
             filteredAccounts: structuredClone(currentUserAccounts)
         });
         this.subordinateUsers.forEach((user) => {
@@ -42,6 +43,7 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
             this.ownersWithAccounts.push({
                 owner: user,
                 accounts: userAccounts,
+                hasAccounts: userAccounts && userAccounts.length > 0,
                 filteredAccounts: structuredClone(userAccounts)
             });
         });
@@ -59,6 +61,14 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
 
     handleFilterApplied(event) {
         console.log('filterApplied', JSON.stringify(event.detail));
-        this.filterList = event.detail.filterList;
+        this.filterList = [...event.detail];
+    }
+
+    handleFilterRemoved(event) {
+        console.log('filterRemoved', JSON.stringify(event.detail));
+        let removedFilter = event.detail;
+        this.filterList = this.filterList.filter(filter => {
+            return filter.id !== removedFilter.id;
+        });
     }
 }

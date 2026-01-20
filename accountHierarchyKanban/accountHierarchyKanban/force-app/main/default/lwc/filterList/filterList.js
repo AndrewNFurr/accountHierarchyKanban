@@ -23,8 +23,10 @@ export default class FilterList extends LightningElement {
 
     handleRemoveFilter(event) {
         const filterId = event.currentTarget.dataset.id;
-        this._filterList = this._filterList.filter(filter => filter.id !== filterId);
-        this.hasFilters = this._filterList.length > 0;
-        this.dispatchEvent(new CustomEvent('filterremoved', { detail: this._filterList }));
+        console.log('Removing filter with id:', filterId);
+        let removedFilter = this._filterList.find(filter => filter.id === filterId);
+        console.log('Removed filter details:', removedFilter);
+        this.hasFilters = this._filterList.length - 1 > 0;
+        this.dispatchEvent(new CustomEvent('filterremoved', { detail: removedFilter }));
     }   
 }
