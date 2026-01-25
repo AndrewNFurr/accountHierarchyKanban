@@ -59,8 +59,11 @@
                     <div key={entry.owner.Id}
                         class="kanban-column"
                         data-owner={entry.owner.Name}>
-                    
-                        <h2 class='column-title'>{entry.owner.Name}</h2>
+
+                        <div class="owner-info">
+                            <h2 class='column-title'>{entry.owner.Name}</h2>
+                            <p>{entry.owner.UserRole.Name}</p>
+                        </div>
 
                         <template for:each={entry.filteredAccounts} for:item="account">
                             <div key={account.Id}

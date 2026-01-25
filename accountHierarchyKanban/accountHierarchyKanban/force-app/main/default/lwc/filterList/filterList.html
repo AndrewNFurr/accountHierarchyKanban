@@ -1,22 +1,53 @@
 <template>
     <lightning-card>
         <div>
+            <h1 class="filter-title">Filters</h1>
+            <template lwc:if={showCombinationButtons}>
+                <div class="combo-buttons">
+                    <lightning-button label="AND" onclick={handleAndClick}></lightning-button>
+                    <lightning-button label="OR" onclick={handleOrClick}></lightning-button>
+                </div>
+            </template>
             <template lwc:if={hasFilters}>
                 <template for:each={filterList} for:item="filter">
-                    <div key={filter.id} class="filter-entry">
-                        <lightning-button-icon
-                            icon-name="utility:delete"
-                            alternative-text="Remove filter"
-                            title="Remove filter"
-                            variant="bare"
-                            class="delete-icon"
-                            data-id={filter.id}
-                            onclick={handleRemoveFilter}
-                        ></lightning-button-icon>
-                        <p>{filter.field}</p>
-                        <p>{filter.operator}</p>
-                        <p>{filter.value}</p>
-                    </div>
+                    <template lwc:if={filter.selected}>
+                        <div key={filter.id} 
+                             class="filter-entry filter-entry-selected" 
+                             data-id={filter.id} 
+                             onclick={handleEntryClick}>
+                            <lightning-button-icon
+                                icon-name="utility:delete"
+                                alternative-text="Remove filter"
+                                title="Remove filter"
+                                variant="bare"
+                                class="delete-icon"
+                                data-id={filter.id}
+                                onclick={handleRemoveFilter}
+                            ></lightning-button-icon>
+                            <p>{filter.field}</p>
+                            <p>{filter.operator}</p>
+                            <p>{filter.value}</p>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div key={filter.id} 
+                             class="filter-entry" 
+                             data-id={filter.id} 
+                             onclick={handleEntryClick}>
+                            <lightning-button-icon
+                                icon-name="utility:delete"
+                                alternative-text="Remove filter"
+                                title="Remove filter"
+                                variant="bare"
+                                class="delete-icon"
+                                data-id={filter.id}
+                                onclick={handleRemoveFilter}
+                            ></lightning-button-icon>
+                            <p>{filter.field}</p>
+                            <p>{filter.operator}</p>
+                            <p>{filter.value}</p>
+                        </div>
+                    </template>
                 </template>
             </template>
         </div>

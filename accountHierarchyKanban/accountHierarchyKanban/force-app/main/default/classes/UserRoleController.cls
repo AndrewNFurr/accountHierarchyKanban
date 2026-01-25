@@ -4,23 +4,20 @@ public with sharing class UserRoleController {
         Id currentUserId = UserInfo.getUserId();
         
         // Get the current user's role
-        User currentUser = [SELECT Id, Name, UserRoleId FROM User WHERE Id = :currentUserId LIMIT 1];
-        System.debug('CurrentUser: ' + currentUser);
+        User currentUser = [SELECT Id, Name, UserRoleId, UserRole.Name FROM User WHERE Id = :currentUserId LIMIT 1];
         userWrapper.currentUser = currentUser;
         
         if (currentUser.UserRoleId == null) {
             userWrapper.subordinateUsers = new List<User>();
             return userWrapper;
         }
-        System.debug('CurrentUser.UserRoleId: ' + currentUser.UserRoleId);
         // Get all roles below the current user's role
         Set<Id> subordinateRoleIds = new Set<Id>();
         subordinateRoleIds = getSubordinateRoles(currentUser.UserRoleId, subordinateRoleIds);
-        System.debug('SubordinateRoleIds: ' + subordinateRoleIds);
         
         // Get all users in those subordinate roles
         List<User> subordinateUsers = new List<User>();
-        for (User u : [SELECT Id, Name, UserRoleId FROM User WHERE UserRoleId IN :subordinateRoleIds AND IsActive = true]) {
+        for (User u : [SELECT Id, Name, UserRoleId, UserRole.Name FROM User WHERE UserRoleId IN :subordinateRoleIds AND IsActive = true]) {
             subordinateUsers.add(u);
         }
         System.debug('SubordinateUsers: ' + subordinateUsers);

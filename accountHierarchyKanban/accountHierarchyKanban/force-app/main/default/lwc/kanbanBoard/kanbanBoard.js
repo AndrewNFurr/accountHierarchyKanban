@@ -4,12 +4,25 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 
 export default class KanbanBoard extends NavigationMixin(LightningElement) {
-    @api accountOwners = [];
+    _accountOwners = [];
     shownOwners = [];
     //@api filterList = [];
     @api currentUser;
     @api fieldMetadataMap = {};
     currentFilterList = [];
+
+    @api
+    get accountOwners() {
+        return this._accountOwners;
+    }
+
+    set accountOwners(value) {
+        this._accountOwners = value;
+        this.shownOwners = structuredClone(value);
+        if (this.currentFilterList && this.currentFilterList.length > 0) {
+            this.setFilters(false);
+        }
+    }
 
     filterField;
     filterOperator;
@@ -28,12 +41,12 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
     }
 
     set filterList(value) {
-        // Prevent unnecessary processing if it's the same data
-        if (JSON.stringify(this._filterList) === JSON.stringify(value)) {
-            return;
-        }
+        console.log('Setting filters - new value:', JSON.stringify(value));
+        console.log('Setting filters - old value:', JSON.stringify(this._filterList));
+        
         this._filterList = value;
         this.currentFilterList = structuredClone(this._filterList);
+        console.log('About to call setFilters with currentFilterList:', JSON.stringify(this.currentFilterList));
         this.setFilters(false);
     }
 
@@ -57,8 +70,6 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
 
     connectedCallback() {
         this.setFilterOptions();
-        this.shownOwners = structuredClone(this.accountOwners);
-        this.currentFilterList = structuredClone(this.filterList);
     }
 
     setFilterOptions() {
@@ -95,10 +106,8 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
     setFilters(applyingFilter) {
         console.log('In setting filters with currentFilterList: ', JSON.stringify(this.currentFilterList));
         try {
-            this.shownOwners.forEach(ownerEntry => {
+            this.shownOwners = this.shownOwners.map(ownerEntry => {
                 let filteredAccounts = structuredClone(ownerEntry.accounts);
-                console.log('Owner Accounts: ', JSON.stringify(filteredAccounts));
-                console.log('currentFilterList: ', JSON.stringify(this.currentFilterList));
                 //No filters, show all accounts
                 if (this.currentFilterList && this.currentFilterList.length > 0) {
                     this.currentFilterList.forEach(filter => {
@@ -107,16 +116,18 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
                         });
                     });
                 }
-                ownerEntry.filteredAccounts = filteredAccounts;
+                return {
+                    ...ownerEntry,
+                    filteredAccounts: filteredAccounts
+                };
             });
-            console.log('All: ', JSON.stringify(this.shownOwners));
             if (applyingFilter) {
                 this.dispatchEvent(new CustomEvent('filterapplied', { detail: structuredClone(this.currentFilterList) }));
                 this.clearValues();
-            } 
+            }
 
         } catch (error) {
-            console.error('Error applying filter:');
+            console.error('Error applying filter:', error);
         }
     }
 
@@ -160,13 +171,9 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
         this.isPicklistFilter = false;
 
         this.filterField = event.detail.value;
-        console.log('filterField: ' + this.filterField);
         let filterFieldEntry = this.fieldMetadataMap[this.filterField];
-        console.log('filterFieldEntry: ' + filterFieldEntry);
         this.isPicklistFilter = filterFieldEntry.picklistOptions && filterFieldEntry.picklistOptions.length > 0;
-        console.log('isPicklistFilter: ' + this.isPicklistFilter);
         if (this.isPicklistFilter) {
-            console.log('filterValueOptions Picklist: ' + filterFieldEntry.picklistOptions);
             this.filterValueOptions = filterFieldEntry.picklistOptions;
             this.inputType = 'picklist';
         } else {
@@ -225,9 +232,6 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
 
     handleFilterValueChange(event) {
         this.filterValue = event.detail.value;
-        if (this.isBooleanFilter) {
-            this.filterValue = (this.filterValue === 'true');
-        }
     }
     
     clearValues() {

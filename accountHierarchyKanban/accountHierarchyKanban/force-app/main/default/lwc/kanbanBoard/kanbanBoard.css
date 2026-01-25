@@ -31,7 +31,7 @@
 }
 
 .kanban-card {
-    background: white;
+    background: rgb(227, 226, 226);
     border: 1px solid #ddd;
     border-radius: 6px;
     padding: 0.75rem;
@@ -55,4 +55,15 @@
 .account-industry, .account-date {
     font-size: 0.8rem;
     color: #555;
+}
+
+.owner-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    background-color: #0070d2;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
 }
