@@ -86,31 +86,32 @@ public with sharing class AccountHierarchyListController {
 
     public class AccountWrapper {
         @AuraEnabled
-        public Map<Id, List<Account>> accountMap;
+        public Map<Id, List<Account>> accountMap { get; set; }
         @AuraEnabled
-        public User currentUser;
+        public User currentUser { get; set; }
         @AuraEnabled
-        public List<User> subordinateUsers;
+        public List<User> subordinateUsers { get; set; }
         @AuraEnabled
-        public List<FieldMetadata> fieldMetadataList;
+        public List<FieldMetadata> fieldMetadataList { get; set; }
     }
 
     public class FieldMetadata {
         @AuraEnabled
-        public String label;
+        public String label { get; set; }
         @AuraEnabled
-        public String apiName;
+        public String apiName { get; set; }       
         @AuraEnabled
-        public String fieldType;
+        public String fieldType { get; set; } 
         @AuraEnabled
-        public List<PicklistOption> picklistOptions;
+        public List<PicklistOption> picklistOptions { get; set; }
     }
 
     public class PicklistOption {
         @AuraEnabled
-        public String label;
+        public String label { get; set; }
         @AuraEnabled
-        public String value;
+        public String value { get; set; }
     }
+
 
 }
