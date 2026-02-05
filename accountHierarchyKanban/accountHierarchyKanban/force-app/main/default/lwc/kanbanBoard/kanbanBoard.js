@@ -122,7 +122,11 @@ export default class KanbanBoard extends NavigationMixin(LightningElement) {
                 };
             });
             if (applyingFilter) {
-                this.dispatchEvent(new CustomEvent('filterapplied', { detail: structuredClone(this.currentFilterList) }));
+                this.dispatchEvent(new CustomEvent('filterapplied', { 
+                    detail: structuredClone(this.currentFilterList),
+                    bubbles: true,
+                    composed: true
+                }));
                 this.clearValues();
             }
 

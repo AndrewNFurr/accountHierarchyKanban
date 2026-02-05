@@ -1,7 +1,9 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/showToastEvent';
 import getAccounts from '@salesforce/apex/AccountHierarchyListController.getAccounts';
+import { reduceErrors } from '.c/ldsUtils';
 
 export default class AccountHierarchyList extends NavigationMixin(LightningElement) {
 
@@ -26,7 +28,11 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
             this.fieldMetadataList = result.fieldMetadataList;
             this.createOwnerObjects();
             this.processFields();
-        });
+        })
+        .catch(error) {
+             const errorMessages = reduceErrors(error);
+             this.showErrorToastMessage(errorMessages);
+        };
     }
 
     createOwnerObjects() {
@@ -70,5 +76,16 @@ export default class AccountHierarchyList extends NavigationMixin(LightningEleme
         this.filterList = this.filterList.filter(filter => {
             return filter.id !== removedFilter.id;
         });
+    }
+
+    showErrorToastMessage(errors) {
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title: 'Error Messages',
+                message: errors.join(', '),
+                variant: 'error',
+                mode: 'sticky'
+            })
+        );
     }
 }
